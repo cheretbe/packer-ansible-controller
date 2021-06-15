@@ -17,8 +17,8 @@ sleep 4s
 
 echo "Updating package cache"
 apt-get update -y -qq
-echo "Installing python3-pip package"
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-pip
+echo "Installing apt packages"
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-pip sshpass
 
 echo "Upgrading pip3"
 # Temporary solution to suppress messages like this:
