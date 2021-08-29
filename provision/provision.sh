@@ -2,36 +2,34 @@
 
 set -euo pipefail
 
-if [ "$UID" != "0" ]; then
-  echo "Re-running the script with sudo"
-  echo sudo su - root $0 $*
-  sudo su - root $0 $*
-  exit
-fi
-
 # A fix for occasional "Release file is not yet valid" error
 # due to invalid time on Windows Virtualbox hosts
-timedatectl set-ntp off
-timedatectl set-ntp on
+echo "Forcing time sync"
+/usr/bin/sudo -n -- sh -c "timedatectl set-ntp off"
+/usr/bin/sudo -n -- sh -c "timedatectl set-ntp on"
 sleep 4s
 
 echo "Updating package cache"
-apt-get update -y -qq
-echo "Installing apt packages"
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-pip sshpass
+/usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qq update"
+echo "Installing sshpass package"
+/usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sshpass"
 
-echo "Upgrading pip3"
-# Temporary solution to suppress messages like this:
-# WARNING: Value for scheme.scripts does not match ...
-# https://github.com/pypa/pip/issues/9617
-# https://stackoverflow.com/questions/67244301/warning-messages-when-i-update-pip-or-install-packages/67250419#67250419
-python3 -m pip install --disable-pip-version-check pip==21.0.1
+if [ ! -d ${HOME}/.cache/venv/ansible ]; then
+  echo "Creating venv"
+  /usr/bin/curl -s https://raw.githubusercontent.com/cheretbe/bootstrap/master/setup_venv.py?flush_cache=True \
+    | /usr/bin/python3 - ansible --batch-mode
+fi
 
-echo "Installing Ansible packages using pip3"
-pip3 --disable-pip-version-check install ansible pywinrm
-
-# echo "Installing Ansible Galaxy package 'community.windows'"
-# ansible-galaxy collection install community.windows
+echo "Installing pip packages"
+(
+  . ${HOME}/.cache/venv/ansible/bin/activate
+  pip3 install ansible pywinrm
+  pip3 cache purge
+)
+# # echo "Installing Ansible Galaxy package 'community.windows'"
+# # ansible-galaxy collection install community.windows
 
 echo "Cleaning up apt cache"
-apt-get clean
+/usr/bin/sudo -n -- sh -c "apt-get clean"
+
+grep -qxF 'PATH="$HOME/.cache/venv/ansible/bin:$PATH"' /home/vagrant/.bashrc || echo -e '\nPATH="$HOME/.cache/venv/ansible/bin:$PATH"' >>/home/vagrant/.profile
