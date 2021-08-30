@@ -14,6 +14,14 @@ echo "Updating package cache"
 echo "Installing sshpass package"
 /usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sshpass"
 
+# Temporary fix for this:
+# https://bugs.launchpad.net/ubuntu/+source/virtualbox/+bug/1939168
+if [[ $(dpkg-query -W -f='${Version}' virtualbox-guest-utils) = "6.1.22-dfsg-2~ubuntu1.20.04.1" ]]; then
+  echo "Downgrading 'virtualbox-guest-utils' package"
+  /usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-downgrades virtualbox-guest-utils=6.1.16-dfsg-6~ubuntu1.20.04.2"
+  /usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-mark hold virtualbox-guest-utils"
+fi
+
 if [ ! -d ${HOME}/.cache/venv/ansible ]; then
   echo "Creating venv"
   /usr/bin/curl -s https://raw.githubusercontent.com/cheretbe/bootstrap/master/setup_venv.py?flush_cache=True \
