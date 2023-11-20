@@ -23,7 +23,7 @@ fi
 echo "Installing pip packages"
 (
   . ${HOME}/.cache/venv/ansible/bin/activate
-  pip3 install ansible pywinrm
+  pip3 install ansible pywinrm jmespath librouteros paramiko scp
   pip3 cache purge
 )
 

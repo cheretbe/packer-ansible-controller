@@ -4,7 +4,7 @@ source "vagrant" "ansible-controller" {
   output_dir         = "output"
   output_vagrantfile = "vagrantfile.template"
   provider           = "virtualbox"
-  source_path        = "ubuntu/focal64"
+  source_path        = "ubuntu/jammy64"
 }
 
 build {
