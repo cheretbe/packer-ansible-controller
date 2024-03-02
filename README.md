@@ -1,5 +1,5 @@
 # packer-ansible-controller
-Ubuntu 20.04 with Ansible installed (to be used as a controller in Vagrant setups)
+Ubuntu 22.04 with Ansible installed (to be used as a controller in Vagrant setups)
 
 ```shell
 packer build -force -on-error=ask packer.pkr.hcl; finished
