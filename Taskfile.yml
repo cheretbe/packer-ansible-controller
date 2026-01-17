@@ -1,0 +1,58 @@
+version: '3'
+
+vars:
+  SOURCE_BOX_IS_PRESENT:
+    sh: vagrant box list --machine-readable | awk -F, '$3=="box-name" && $4=="bento/debian-13"' | grep -q . && echo true || echo false
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  update-source-box:
+    desc: Update source vagrant box
+    internal: true
+    status:
+      - '[ "{{.SOURCE_BOX_IS_PRESENT}}" = "false" ]'
+    cmds:
+      - vagrant box update --box bento/debian-13
+
+  prepare-venv:
+    desc: Prepare virtual environment for publishing
+    internal: true
+    silent: true
+    preconditions:
+      - sh: 'command -v hcp'
+        msg: "hcp binary not found. Use 'sudo apt install hcp' to install it."
+    cmds:
+      - python3 -m venv ~/.cache/venv/packer-ansible-controller
+      - |
+        . ~/.cache/venv/packer-ansible-controller/bin/activate || :
+        pip install --upgrade pip;
+        pip install wheel;
+        pip install -r publish_requirements.txt;
+
+  cleanup:
+    desc: Cleanup output directory
+    cmds:
+      - rm -rfv output/*
+
+  build:
+    desc: Build ansible-controller box
+    deps:
+      - update-source-box
+    cmds:
+      - packer init packer.pkr.hcl
+      - packer build -force -on-error=ask -var skip_add={{.SOURCE_BOX_IS_PRESENT}} packer.pkr.hcl
+
+  publish:
+    desc: Publish built ansible-controller box
+    deps:
+      - prepare-venv
+    cmds:
+      # Change develop to main when merged
+      - wget https://raw.githubusercontent.com/cheretbe/packer-routeros/refs/heads/develop/tools/box_publish.py -O output/box_publish.py
+      - wget https://raw.githubusercontent.com/cheretbe/packer-routeros/refs/heads/develop/tools/routeros_utils.py -O output/routeros_utils.py
+      - ~/.cache/venv/packer-ansible-controller/bin/python3 ~/projects/packer-routeros/tools/box_publish.py --box-file output/ansible-controller.box --box-name ansible-controller --hcp-creds-prompt

@@ -11,8 +11,14 @@ sleep 4s
 
 echo "Updating package cache"
 /usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -qq update"
-echo "Installing sshpass package"
-/usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sshpass"
+echo "Upgrading installed packages"
+/usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -y -qq upgrade"
+echo "Installing apt packages"
+/usr/bin/sudo -n -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sshpass git"
+
+echo "Generating ru_RU.UTF-8 locale"
+/usr/bin/sudo -n -- sh -c "sed -i '/^#.*ru_RU\.UTF-8.*UTF-8/s/^#[[:space:]]*//' /etc/locale.gen"
+/usr/bin/sudo -n -- sh -c "locale-gen"
 
 if [ ! -d ${HOME}/.cache/venv/ansible ]; then
   echo "Creating venv"
@@ -31,3 +37,9 @@ echo "Cleaning up apt cache"
 /usr/bin/sudo -n -- sh -c "apt-get clean"
 
 grep -qxF 'PATH="$HOME/.cache/venv/ansible/bin:$PATH"' /home/vagrant/.bashrc || echo -e '\nPATH="$HOME/.cache/venv/ansible/bin:$PATH"' >>/home/vagrant/.profile
+
+echo "Writing ansible.cfg"
+cat > ~/ansible.cfg << 'EOF'
+[defaults]
+interpreter_python = auto_silent
+EOF

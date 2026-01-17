@@ -1,23 +1,8 @@
 # packer-ansible-controller
-Ubuntu 22.04 with Ansible installed (to be used as a controller in Vagrant setups)
+Debian 13 (Trixie) with Ansible installed (to be used as a controller in Vagrant setups)
 
-```shell
-# Fix for "Error: Unknown source type vagrant" error
-packer plugins install github.com/hashicorp/vagrant
+### Debug
 
-packer build -force -on-error=ask packer.pkr.hcl; finished
-
-vagrant-tools # Select "Publish a box to Vagrant Cloud"
-
-rm -rf output/
-```
-```bat
-:: Windows
-
-RMDIR output /S /Q
-```
-
-Debug
 ```shell
 vagrant box add -f packer-ansible-controller-2del ./output/ansible-controller.box
 
